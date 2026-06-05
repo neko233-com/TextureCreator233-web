@@ -147,6 +147,15 @@
     .control-select {
       min-width: 190px;
     }
+
+    .type-zh {
+      display: block;
+      margin-top: 2px;
+      font-size: 10px;
+      line-height: 1.1;
+      color: #8fa3c0;
+      white-space: nowrap;
+    }
   </style>
 </head>
 
@@ -341,49 +350,26 @@
         Kaleido: "万花筒", SymmetricNoise: "对称噪声"
       };
 
-      const EN_SET = new Set(Object.keys(TYPE_ZH));
-
-      function formatType(enName) {
-        const zh = TYPE_ZH[enName];
-        return zh ? enName + "（" + zh + "）" : enName;
-      }
-
-      function patchTypeOptions() {
-        document.querySelectorAll("select option").forEach((opt) => {
-          const key = EN_SET.has(opt.value) ? opt.value : (EN_SET.has(opt.textContent.trim()) ? opt.textContent.trim() : "");
-          if (key) opt.textContent = formatType(key);
+      function patchThumbnailCaptions() {
+        document.querySelectorAll(".thumbnail-item span").forEach((span) => {
+          const raw = (span.textContent || "").trim();
+          if (!raw) return;
+          const en = raw.split("（")[0].trim();
+          const zh = TYPE_ZH[en];
+          if (!zh) return;
+          if (span.querySelector(".type-zh")) return;
+          span.innerHTML = en + '<small class="type-zh">' + zh + '</small>';
         });
-      }
-
-      function patchThumbnailTitles() {
-        document.querySelectorAll(".thumbnail-item").forEach((item) => {
-          const raw = item.getAttribute("data-type") || item.title || "";
-          if (EN_SET.has(raw)) item.title = formatType(raw);
-        });
-      }
-
-      function patchTextNodes() {
-        const nodes = document.querySelectorAll("#thumbnail-grid div, #modal-grid-body div, #gui-left div, #gui-left span");
-        nodes.forEach((node) => {
-          const text = node.textContent ? node.textContent.trim() : "";
-          if (EN_SET.has(text)) node.textContent = formatType(text);
-        });
-      }
-
-      function applyBilingualTypes() {
-        patchTypeOptions();
-        patchThumbnailTitles();
-        patchTextNodes();
       }
 
       window.addEventListener("load", () => {
-        applyBilingualTypes();
-        setTimeout(applyBilingualTypes, 100);
-        setTimeout(applyBilingualTypes, 600);
+        patchThumbnailCaptions();
+        setTimeout(patchThumbnailCaptions, 100);
+        setTimeout(patchThumbnailCaptions, 600);
 
         let count = 0;
         const timer = setInterval(() => {
-          applyBilingualTypes();
+          patchThumbnailCaptions();
           count += 1;
           if (count >= 12) clearInterval(timer);
         }, 500);
