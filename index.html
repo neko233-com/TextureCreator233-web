@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TextureCreate - 纹理生成器</title>
+  <link rel="icon" type="image/png" href="./favicon.png">
+  <meta name="description" content="基于 WebGL2 的高性能纹理生成器，搭载 50+ 种纹理类型与渐变映射 (Gradient Ramp) 功能。">
+  <script src="./gif.js"></script>
+  <script defer src="./assets/index-CE9_u47Z.js"></script>
+  <link rel="stylesheet" href="./assets/index-qS6aG5iE.css">
+  <style>
+    :root {
+      --bg-0: #0f1116;
+      --bg-1: #171b22;
+      --bg-2: #1d2430;
+      --panel: #161b24cc;
+      --panel-border: #2d3645;
+      --text-main: #e8eefc;
+      --text-sub: #9aa8bf;
+      --accent: #3b82f6;
+      --accent-2: #0ea5a6;
+    }
+
+    body {
+      background:
+        radial-gradient(1200px 700px at 15% -20%, #21314f66 0%, transparent 55%),
+        radial-gradient(900px 600px at 100% 0%, #12363d55 0%, transparent 45%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-0));
+      color: var(--text-main);
+    }
+
+    #header {
+      height: 42px;
+      border-bottom: 1px solid var(--panel-border);
+      background: linear-gradient(180deg, #1b2330cc, #111722cc);
+      backdrop-filter: blur(8px);
+    }
+
+    #app-title {
+      letter-spacing: 0.2px;
+      text-shadow: 0 1px 8px #00000066;
+    }
+
+    .side-panel,
+    .layer-side-panel,
+    #top-panel,
+    .thumbnail-side-panel,
+    #thumbnail-panel-wrapper {
+      background: var(--panel);
+      border-color: var(--panel-border) !important;
+      backdrop-filter: blur(6px);
+    }
+
+    .header-btn,
+    .preset-btn,
+    .export-btn,
+    .dropdown-btn,
+    #btn-toggle-thumb-panel,
+    .layer-add-btn {
+      border: 1px solid #3b465b !important;
+      background: linear-gradient(180deg, #2a3447, #20293a) !important;
+      color: var(--text-main) !important;
+      box-shadow: 0 4px 12px #00000033;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+    }
+
+    .header-btn:hover,
+    .preset-btn:hover,
+    .export-btn:hover,
+    .dropdown-btn:hover,
+    #btn-toggle-thumb-panel:hover,
+    .layer-add-btn:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 16px #00000055;
+    }
+
+    .dropdown-content {
+      border: 1px solid #3a465d;
+      background: #1a2130f2;
+    }
+
+    .dropdown-content button {
+      color: var(--text-main);
+    }
+
+    .dropdown-content button:hover {
+      background: #243149;
+    }
+
+    .category-header,
+    .section-title,
+    .param-group-title {
+      color: #dce7ff !important;
+    }
+
+    a {
+      color: #9ec5ff;
+    }
+
+    a:hover {
+      color: #c6ddff;
+    }
+
+    .modal-content {
+      border: 1px solid #3a455c;
+      background: #141b27f0;
+      box-shadow: 0 20px 50px #00000080;
+    }
+
+    #gif-progress-overlay > div {
+      border-color: #3a455c !important;
+      background: #141b27f0 !important;
+    }
+
+    #gif-progress-bar {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2)) !important;
+    }
+
+    @media (max-width: 1200px) {
+      #header {
+        height: 48px;
+      }
+    }
+
+    #left-panel {
+      width: 250px;
+    }
+
+    #right-panel {
+      width: 250px;
+    }
+
+    .layer-side-panel {
+      width: 132px;
+    }
+
+    #thumbnail-panel-wrapper,
+    #thumbnail-panel {
+      width: 260px;
+      min-width: 260px;
+    }
+
+    select,
+    .control-select {
+      min-width: 190px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+
+    <!-- 顶部标题栏 -->
+    <div id="header">
+      <div id="header-left" style="display:flex; align-items:center; gap: 10px;">
+        <span id="app-title">TextureCreate</span>
+        <span style="font-size: 0.8em; color: #888; display: flex; align-items: center; gap: 8px;">
+          <span>by <a href="https://gameanimation.info/" target="_blank"
+              style="color:#aaa; text-decoration:none;">游戏UI演出</a></span>
+          <span style="color: #666;">|</span>
+          <a id="link-terms" href="https://gameanimation.info/?p=5200" target="_blank"
+            style="color:#aaa; text-decoration:underline;">使用条款</a>
+          <span style="color: #666;">|</span>
+          <a href="https://gameanimation.booth.pm/items/4334040" target="_blank"
+            style="color:#aaa; text-decoration:underline;">Effect_Ideas_100</a>
+          <span style="color: #666;">|</span>
+          <a href="https://gameanimation.booth.pm/items/3147121" target="_blank"
+            style="color:#aaa; text-decoration:underline;">Texture_Ideas_100</a>
+          <span style="color: #666;">|</span>
+          <a href="https://gameanimation.booth.pm/items/5424271" target="_blank"
+            style="color:#aaa; text-decoration:underline;">Particle_Ideas_100</a>
+        </span>
+      </div>
+      <div id="header-right">
+        <!-- 预设保存与加载 -->
+        <button id="btn-save-preset" class="preset-btn header-btn">保存预设</button>
+        <button id="btn-load-preset" class="preset-btn header-btn">加载预设</button>
+        <input type="file" id="input-load-preset" accept=".json" style="display:none;" />
+
+        <button id="btn-lang-toggle" class="header-btn"
+          style="background:transparent;border:1px solid #444;color:#ccc;cursor:pointer;border-radius:4px;padding:2px 8px;margin-left:12px;font-size:0.8rem;">🌐
+          EN</button>
+      </div>
+    </div>
+
+    <!-- 主体四栏布局 -->
+    <div id="body">
+
+      <!-- 图层面板 -->
+      <div id="layer-panel" class="layer-side-panel">
+        <div class="layer-panel-header">
+          <button id="btn-add-layer-top" class="layer-add-btn" title="添加图层">+</button>
+        </div>
+        <div id="layer-list-container">
+          <!-- JS 注入图层项 -->
+        </div>
+      </div>
+
+      <!-- 左面板：类型与参数 -->
+      <div id="left-panel" class="side-panel">
+        <div id="gui-left">
+          <!-- 由 JS 生成 -->
+        </div>
+      </div>
+
+      <!-- 缩略图面板（包装层 + 切换标签） -->
+      <div style="display:flex; height:100%; flex-shrink:0;">
+        <div id="thumbnail-panel-wrapper" class="thumbnail-panel-wrapper">
+          <div id="thumbnail-panel" class="thumbnail-side-panel">
+            <div id="thumbnail-grid-container">
+              <div id="thumbnail-grid"></div>
+            </div>
+          </div>
+        </div>
+        <!-- 右侧切换标签按钮（始终显示） -->
+        <button id="btn-toggle-thumb-panel" class="thumb-toggle-tab" title="显示/隐藏类型列表">◀</button>
+      </div>
+
+      <!-- 中央：顶栏 + 画布 -->
+      <div id="center-column">
+        <!-- 顶栏（导出按钮等） -->
+        <div id="top-panel">
+
+          <!-- 导出下拉菜单 -->
+          <div class="dropdown">
+            <button id="btn-save-export-dropdown" class="export-btn dropdown-btn" style="background:#2d88ff;">保存导出 ▼</button>
+            <div class="dropdown-content">
+              <button id="btn-save-png">保存 PNG</button>
+              <button id="btn-save-gif">保存 GIF</button>
+              <button id="btn-save-normal">保存法线贴图</button>
+            </div>
+          </div>
+
+          <button id="btn-open-grid-modal" class="export-btn" style="background:#2196f3;">显示全部类型</button>
+
+          <div class="top-divider"></div>
+
+          <!-- 背景色切换 -->
+          <div class="preset-controls">
+            <div style="display: flex; flex-wrap: nowrap; gap: 10px; margin-left: auto;">
+              <label
+                style="color: #fff; font-size: 13px; display: flex; align-items: center; cursor: pointer; white-space: nowrap;">
+                <input type="checkbox" id="chk-black-bg" style="margin-right: 5px;" />
+                <span id="label-black-bg">黑色背景</span>
+              </label>
+              <label
+                style="color: #fff; font-size: 13px; display: flex; align-items: center; cursor: pointer; white-space: nowrap;">
+                <input type="checkbox" id="chk-cb-bg" style="margin-right: 5px;" checked />
+                <span id="label-cb-bg">棋盘背景</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- 画布区域 -->
+        <div id="canvas-area">
+          <div id="preview-canvas-container">
+            <canvas id="preview-canvas" width="512" height="512"></canvas>
+            <div id="canvas-overlay">512 × 512 px</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右面板：后期处理与渐变映射 -->
+      <div id="right-panel" class="side-panel">
+        <div id="gui-right">
+          <!-- 由 JS 生成 -->
+        </div>
+
+        <!-- 渐变映射区域 -->
+        <div id="gradient-section">
+          <div class="category-header" id="grad-cat-header">
+            渐变映射
+            <label class="check-label" onclick="event.stopPropagation()">
+              <input type="checkbox" id="grad-enable-toggle" />
+              <span class="grad-enable-text">启用</span>
+            </label>
+          </div>
+          <div id="gradient-editor-area"></div>
+        </div>
+      </div>
+
+    </div><!-- /#body -->
+  </div><!-- /#app -->
+
+  <!-- 全屏纹理类型网格弹窗 -->
+  <div id="texture-grid-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="modal-title">纹理类型一览</span>
+        <button id="modal-close-btn" class="modal-close">✖</button>
+      </div>
+      <div id="modal-grid-body" class="modal-body">
+        <!-- JS 注入缩略图 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- GIF 导出进度遮罩 -->
+  <div id="gif-progress-overlay" class="modal-overlay"
+    style="display: none; z-index: 10000; flex-direction: column; justify-content: center; align-items: center;">
+    <div
+      style="background: rgba(30, 30, 30, 0.9); padding: 30px; border-radius: 8px; border: 1px solid #444; text-align: center; min-width: 300px;">
+      <h3 id="gif-progress-text" style="color: #fff; margin-top: 0; margin-bottom: 20px;">GIF 保存中... 0%</h3>
+      <div style="width: 100%; background: #222; height: 10px; border-radius: 5px; overflow: hidden;">
+        <div id="gif-progress-bar" style="width: 0%; height: 100%; background: #e91e63; transition: width 0.1s;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const TYPE_ZH = {
+        Circle: "圆形", Vignette: "暗角", LensFlare: "镜头光晕", Sun: "太阳光", SolarGlow: "日冕辉光",
+        Ring: "圆环", Crescent: "新月", Flash: "闪光", EnergyRing: "能量环", AuraRing: "光环",
+        Halo: "光晕", Ripple: "涟漪", Concentric: "同心圆", Pulse: "脉冲", MetaBalls: "融球",
+        WaveRingSine: "正弦波环", WaveRingNoisy: "噪声波环", WaveRingSquare: "方波环", WaveRingDouble: "双层波环", Star: "星形",
+        Polygon: "多边形", HexGridRadial: "六边径向网格", Rectangle: "矩形", Checker: "棋盘格", GradientChecker: "渐变棋盘",
+        RoundChecker: "圆角棋盘", DiamondChecker: "菱形棋盘", Spark: "火花", Flare: "耀斑", Cross: "十字",
+        Glare: "强光", StarFlare: "星芒", RayBurst: "光线爆发", Burst: "爆发", ImpactLines: "冲击线",
+        RadialLines: "放射线", SpiralV2: "螺旋2", Swirl: "漩涡", GodRay: "圣光", StarBurst: "星爆",
+        Flower: "花形", Spiral: "螺旋", Energy: "能量纹", Crack: "裂纹", Bokeh: "散景",
+        Shimmer: "闪烁", VoronoiFluid: "流体沃罗诺伊", Speckle: "斑点", CrossGrid: "十字网格", SquareGrid: "方形网格",
+        PyramidPattern: "金字塔纹", RandomTiles: "随机瓷砖", SquareGridDash: "方格虚线", Dots: "圆点", SquareGridPolka: "波点方格",
+        DotMatrix: "点阵", Zigzag: "锯齿线", Crosshatch: "交叉排线", TriGrid: "三角网格", Bricks: "砖块",
+        Scanline: "扫描线", FlowLines: "流动线", Fabric: "织物", PolarDots: "极坐标圆点", Weave: "编织",
+        Halftone: "半调网点", SweepGradient: "扫掠渐变", GradationLinear: "线性渐变", GradationReflect: "反射渐变", GradationRepeat: "重复渐变",
+        BevelSquare: "倒角方块", Grain: "颗粒", PerlinNoise: "柏林噪声", FbmNoise: "分形噪声", DistortionWave: "扭曲波",
+        StripeNoise: "条纹噪声", ToxicCloud: "毒云", GeoRelief: "地形浮雕", Smoke: "烟雾", WaterTurbulence: "水波湍流",
+        Electric: "电流", SimplexNoise: "单纯形噪声", Lava: "熔岩", Wrinkle: "皱纹", Crystal: "水晶",
+        AbsNoise: "绝对值噪声", FractalCamo: "分形迷彩", PlasmaV2: "等离子2", Squiggles: "涂鸦曲线", Grunge: "污渍",
+        GrungeV2: "污渍2", CellularEdge: "细胞边缘", Twirl: "扭旋", CosmicPortal: "宇宙之门", Wormhole: "虫洞",
+        Plasma: "等离子", MarbleNoise: "大理石噪声", Fire: "火焰", Cloud: "云层", Caustics: "焦散",
+        Aurora: "极光", Flame: "火苗", PixelNoise: "像素噪声", AnalogGlitch: "模拟故障", CyberBlock: "赛博方块",
+        Mosaic: "马赛克", LaserBeam: "激光束", GlitchBlock: "故障块", VoronoiCell: "沃罗诺伊单元", Matrix: "矩阵雨",
+        Wood: "木纹", SparkBurst: "火花爆发", VoronoiNoise: "沃罗诺伊噪声", Cell: "细胞纹", Lightning: "闪电",
+        Kaleido: "万花筒", SymmetricNoise: "对称噪声"
+      };
+
+      const EN_SET = new Set(Object.keys(TYPE_ZH));
+
+      function formatType(enName) {
+        const zh = TYPE_ZH[enName];
+        return zh ? enName + "（" + zh + "）" : enName;
+      }
+
+      function patchTypeOptions() {
+        document.querySelectorAll("select option").forEach((opt) => {
+          const key = EN_SET.has(opt.value) ? opt.value : (EN_SET.has(opt.textContent.trim()) ? opt.textContent.trim() : "");
+          if (key) opt.textContent = formatType(key);
+        });
+      }
+
+      function patchThumbnailTitles() {
+        document.querySelectorAll(".thumbnail-item").forEach((item) => {
+          const raw = item.getAttribute("data-type") || item.title || "";
+          if (EN_SET.has(raw)) item.title = formatType(raw);
+        });
+      }
+
+      function patchTextNodes() {
+        const nodes = document.querySelectorAll("#thumbnail-grid div, #modal-grid-body div, #gui-left div, #gui-left span");
+        nodes.forEach((node) => {
+          const text = node.textContent ? node.textContent.trim() : "";
+          if (EN_SET.has(text)) node.textContent = formatType(text);
+        });
+      }
+
+      function applyBilingualTypes() {
+        patchTypeOptions();
+        patchThumbnailTitles();
+        patchTextNodes();
+      }
+
+      const observer = new MutationObserver(() => applyBilingualTypes());
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+
+      window.addEventListener("load", () => {
+        applyBilingualTypes();
+        setTimeout(applyBilingualTypes, 100);
+        setTimeout(applyBilingualTypes, 600);
+      });
+    })();
+  </script>
+
+</body>
+
+</html>
