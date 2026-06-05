@@ -376,13 +376,17 @@
         patchTextNodes();
       }
 
-      const observer = new MutationObserver(() => applyBilingualTypes());
-      observer.observe(document.documentElement, { childList: true, subtree: true });
-
       window.addEventListener("load", () => {
         applyBilingualTypes();
         setTimeout(applyBilingualTypes, 100);
         setTimeout(applyBilingualTypes, 600);
+
+        let count = 0;
+        const timer = setInterval(() => {
+          applyBilingualTypes();
+          count += 1;
+          if (count >= 12) clearInterval(timer);
+        }, 500);
       });
     })();
   </script>
