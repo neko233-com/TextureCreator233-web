@@ -387,6 +387,28 @@
         Kaleido: "万花筒", SymmetricNoise: "对称噪声"
       };
 
+      function getEnglishTypeName(raw) {
+        var text = (raw || "").trim();
+        if (!text) return "";
+        var en = text.split("（")[0].split("(")[0].trim();
+        return TYPE_ZH[en] ? en : "";
+      }
+
+      function repairThumbnailStructure() {
+        var selectors = ["#thumbnail-grid .thumbnail-item", "#modal-grid-body .thumbnail-item"];
+        selectors.forEach(function (sel) {
+          document.querySelectorAll(sel).forEach(function (item) {
+            if (item.querySelector("img") && item.querySelector("span")) return;
+            var dataType = item.getAttribute("data-type") || "";
+            var title = item.getAttribute("title") || "";
+            var text = item.textContent || "";
+            var en = getEnglishTypeName(dataType) || getEnglishTypeName(title) || getEnglishTypeName(text);
+            if (!en) return;
+            item.innerHTML = '<img src="./thumbnails/' + en + '.png" width="40" height="40" /><span>' + en + "</span>";
+          });
+        });
+      }
+
       function patchThumbnailCaptions() {
         document.querySelectorAll(".thumbnail-item span").forEach((span) => {
           const raw = (span.textContent || "").trim();
@@ -501,15 +523,17 @@
       }
 
       window.addEventListener("load", () => {
+        repairThumbnailStructure();
         patchThumbnailCaptions();
         patchThumbnailSearchCaptions();
         initThumbnailSearch();
         initDropdownFix();
-        setTimeout(() => { patchThumbnailCaptions(); patchThumbnailSearchCaptions(); }, 100);
-        setTimeout(() => { patchThumbnailCaptions(); patchThumbnailSearchCaptions(); }, 600);
+        setTimeout(() => { repairThumbnailStructure(); patchThumbnailCaptions(); patchThumbnailSearchCaptions(); }, 100);
+        setTimeout(() => { repairThumbnailStructure(); patchThumbnailCaptions(); patchThumbnailSearchCaptions(); }, 600);
 
         let count = 0;
         const timer = setInterval(() => {
+          repairThumbnailStructure();
           patchThumbnailCaptions();
           patchThumbnailSearchCaptions();
           count += 1;
