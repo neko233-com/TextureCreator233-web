@@ -119,6 +119,16 @@
       background: linear-gradient(90deg, var(--accent), var(--accent-2)) !important;
     }
 
+    #top-panel,
+    #center-column,
+    .dropdown {
+      overflow: visible !important;
+    }
+
+    .dropdown-content {
+      z-index: 10000 !important;
+    }
+
     @media (max-width: 1200px) {
       #header {
         height: 48px;
@@ -156,6 +166,21 @@
       color: #8fa3c0;
       white-space: nowrap;
     }
+
+    #thumbnail-grid,
+    #modal-grid-body {
+      grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    .thumbnail-item img {
+      width: 60px !important;
+      height: 60px !important;
+    }
+
+    .thumbnail-item span {
+      max-width: 60px !important;
+      font-size: 9px !important;
+    }
   </style>
 </head>
 
@@ -166,17 +191,6 @@
     <div id="header">
       <div id="header-left" style="display:flex; align-items:center; gap: 10px;">
         <span id="app-title">TextureCreate</span>
-        <span style="font-size: 0.8em; color: #888; display: flex; align-items: center; gap: 8px;">
-          <span>by 游戏UI演出</span>
-          <span style="color: #666;">|</span>
-          <span id="link-terms" style="color:#aaa;">使用条款</span>
-          <span style="color: #666;">|</span>
-          <span style="color:#aaa;">Effect_Ideas_100</span>
-          <span style="color: #666;">|</span>
-          <span style="color:#aaa;">Texture_Ideas_100</span>
-          <span style="color: #666;">|</span>
-          <span style="color:#aaa;">Particle_Ideas_100</span>
-        </span>
       </div>
       <div id="header-right">
         <!-- 预设保存与加载 -->
@@ -237,8 +251,6 @@
               <button id="btn-save-normal">保存法线贴图</button>
             </div>
           </div>
-
-          <button id="btn-open-grid-modal" class="export-btn" style="background:#2196f3;">显示全部类型</button>
 
           <div class="top-divider"></div>
 

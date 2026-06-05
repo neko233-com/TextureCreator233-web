@@ -9,7 +9,7 @@
 
 无需 Python、无需 Node、无需后端。
 
-## Cloudflare Pages 部署（推荐）
+## Cloudflare Pages 部署
 
 1. 将本仓库推送到 GitHub
 2. 打开 Cloudflare Dashboard -> `Workers & Pages` -> `Create` -> `Pages`
@@ -19,10 +19,6 @@
    - Build command: 留空
    - Build output directory: `/`（根目录）
 5. 点击部署
+6. 在 `Custom domains` 添加 `texture.neko233.store`
 
-## GitHub Pages 部署
-
-已提供 `.github/workflows/pages.yml`，推送到 `main` 后会自动发布。
-
-发布地址示例：
-- `https://<your-username>.github.io/<repo-name>/`
+发布后访问：`https://texture.neko233.store`
